@@ -1,0 +1,6 @@
+# Ignore the vagrant directory
+
+.vagrant/**
+*cloudimg-console.log
+
+
