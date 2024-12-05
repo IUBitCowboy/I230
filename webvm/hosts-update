@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# This script is to set the www.i230.edu name in /etc/hosts to the IP that is dynamically bound
+# to the eth1 interface when it comes up
+
+# Also configures iptables 
+
+
+ETH1_IP=$(landscape-sysinfo --sysinfo-plugins=Network | sed 's/.*eth1\: \(.*\)/\1/')
+
+echo $ETH1_IP
+
+sed -i "s/.* \(www.i230.edu\)/$ETH1_IP \1/" /etc/hosts
+
+# flush the iptable since this script is being exuted many times on boot and I'm not sure how 
+# to guard against multiple runs. But no harm is done this way.
+iptables -F INPUT 
+
+# configure the default for INPUT to DROP
+iptables -P INPUT DROP
+
+# need to accept anything on interface eth0
+iptables -A INPUT -i eth0 -j ACCEPT
+
+# need to accept all established connections.
+iptables -A INPUT  -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# log any dropped packets
+iptables -A INPUT -j LOG
